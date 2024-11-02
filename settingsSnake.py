@@ -12,6 +12,15 @@ RED_COLOR = (255, 0, 0)
 BLACK_COLOR = (0, 0, 0)
 MAIN_MENU_COLOR = (125, 120, 140)
 
+# bg images
+bg_main_menu = pg.image.load('images/bg_main_menu.jpg')
+bg_main_menu = pg.transform.scale(bg_main_menu, (W, H))
+rect_bg_main_menu = bg_main_menu.get_rect()
+
+bg_settings_menu = pg.image.load('images/bg_settings.jpg')
+bg_settings_menu = pg.transform.scale(bg_settings_menu, (W, H))
+rect_bg_settings_menu = bg_settings_menu.get_rect()
+
 # Size buttons constant
 size_button_main_menu = (100, 75)
 
