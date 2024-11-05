@@ -1,6 +1,5 @@
 import pygame as pg
-
-pg.init()
+import random
 
 W, H = 1280, 720
 
@@ -21,34 +20,10 @@ bg_settings_menu = pg.image.load('images/bg_settings.jpg')
 bg_settings_menu = pg.transform.scale(bg_settings_menu, (W, H))
 rect_bg_settings_menu = bg_settings_menu.get_rect()
 
-# Size buttons constant
-size_button_main_menu = (100, 75)
-
-# Flag constant for programm
-FlagMainMenu = False
-
-FPS = 60
-
 # Create values for game
-game_score = 0
-speed = 40
-
-# Create shrift and many buttons
-# shrift
-shrift = pg.font.SysFont('arial', 14)
-
-# buttons
-main_menu_play_button = shrift.render("PLAY", 1, RED_COLOR,
-                                      GREEN_COLOR)  # кнопка игры. Пишем текст, ставим сглаживание(1), цвет шрифта, цвет фона
-main_menu_quit_button = shrift.render("EXIT", 1, RED_COLOR, GREEN_COLOR)  # Кнопка выхода
-
-# scale our buttons
-main_menu_play_button = pg.transform.scale(main_menu_play_button, size_button_main_menu)
-main_menu_quit_button = pg.transform.scale(main_menu_quit_button, size_button_main_menu)
-
-# Text main menu
-menu_text = shrift.render("MENU", 1, RED_COLOR, None)
-menu_text = pg.transform.scale(menu_text, size_button_main_menu)
+GAME_SCORE = 0
+size_rect = 40
+FPS = 60
 
 
 def draw_text(text, size_font, center_coordinats, color, screen):
@@ -57,14 +32,38 @@ def draw_text(text, size_font, center_coordinats, color, screen):
     text_rect = text_surface.get_rect(center=center_coordinats)
     screen.blit(text_surface, text_rect)
 
-#
-# # button play in main menu
-# play_button = pg.Surface(size_button_main_menu)
-# pos_play_button = play_button.get_rect(topleft=(pos_main_menu.x + 100, pos_main_menu.y + 50))
-# play_button.fill(GREEN_COLOR)
-# print(f"pos main menu bottomleft: {pos_main_menu.bottomleft}")
-#
-# # button quit in main menu
-# quit_button = pg.Surface(size_button_main_menu)
-# pos_quit_button = quit_button.get_rect(bottomleft=(pos_main_menu.bottomleft[0] + 100, pos_main_menu.bottomleft[1] + 100))
-# quit_button.fill(GREEN_COLOR)
+
+# lines for snake
+def create_grid_lines():
+    container_rects_background = {}
+    for x in range(0, int(W / size_rect)):
+        for j in range(0, int(H / size_rect)):
+            container_rects_background[f'{x}_{j}'] = pg.Rect(x * size_rect, j * size_rect, size_rect, size_rect)
+
+    return container_rects_background
+
+
+def random_goal_rect(grid: dict):
+    x_pos = random.randint(0, int(W / size_rect))
+    y_pos = random.randint(0, int(H / size_rect))
+
+    if x_pos == 20 and y_pos == 13:
+        while x_pos == 20 and y_pos == 13:
+            x_pos = random.randint(0, int(W / size_rect))
+            y_pos = random.randint(0, int(H / size_rect))
+
+    rect = f'{x_pos}_{y_pos}'
+
+    return grid.get(rect)
+
+
+def get_direct_snake_move(event):
+    if event.key == pg.K_UP:
+        return 'up'
+    elif event.key == pg.K_DOWN:
+        return 'down'
+    elif event.key == pg.K_LEFT:
+        return 'left'
+    elif event.key == pg.K_RIGHT:
+        return 'right'
+

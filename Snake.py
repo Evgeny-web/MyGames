@@ -1,11 +1,11 @@
-import random
 import sys
+import time
 
 from ObjectsClasses import imageButton
 from Sprites import Ball, Ball2v, SnakeHero
 from settingsSnake import *
 
-# pg.init()
+pg.init()
 # pg.time.set_timer(pg.USEREVENT, 2000)  # 2000 указываются в мс, т.е. 2с (таймер события)
 
 # Set window object and size
@@ -51,40 +51,66 @@ array_btn_settings = [grafics_btn, control_btn, back_btn]
 clock = pg.time.Clock()
 
 
-def draw_display_lines_for_snake():
-    sc.fill(BLACK_COLOR)
-    container_rects_background = []
-    for x in range(0, W, speed):
-        for j in range(0, H, speed):
-            rec = pg.draw.rect(sc, BLUE_COLOR, (x, j, speed, speed), 1)
-            container_rects_background.append(rec)
+def create_snake_hero(size_rect):  # функция для создания нашей головы змеи
+    snake_rect = pg.Rect(20 * size_rect, 13 * size_rect, size_rect, size_rect)
 
-    return container_rects_background
+    hero = SnakeHero(snake_rect[0], snake_rect[1], snake_rect, None, size_rect, GAME_SCORE)
 
-def random_position_snake():
-    pass
+    return hero
 
 
-def create_snake_hero(container_rects_bg):
-    pass
+def game_menu():  # Функция для отображения окна и игрой после нажатия кнопки Game
+    snake_hero = create_snake_hero(size_rect)
+    # grid game lines
+    grid = create_grid_lines()
+    # random goal rect
+    goal_rect = random_goal_rect(grid)
+    running = True
+    direct = 0
+    while running:
+        # чтобы наша змейка не убежала сразу за экран, необходимо замедлить работу игры
+        time.sleep(0.4)
+        sc.fill(BLACK_COLOR)
+
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                running = False
+                pg.quit()
+                sys.exit()
+
+            # Проверяем нажатие кнопки и задаем направление движения
+            elif event.type == pg.KEYDOWN:
+                direct = get_direct_snake_move(event)
+
+        # Прежде чем все отрисовывать, обновляем данные sanke_hero.rect
+        snake_hero.update(direct)
+        # for pos, rec in grid.items():
+        #     pg.draw.rect(sc, BLUE_COLOR, rec, 1)
+
+        # Проверка на достижения цели. Съели мы фрукт или нет?
+        if goal_rect.contains(snake_hero.rect):
+            snake_hero.score += 1
+            goal_rect = random_goal_rect(grid)
 
 
-# Create main menu for game with buttons: play, settings, quit
-main_menu = pg.Surface((300, 450))
-pos_main_menu = main_menu.get_rect(center=(W // 2, H // 2))
+        # Проверяем не врезались ли мы в края, если да, то выводим надпись и выходим
+        if snake_hero.check_bounds_out():
+            sc.fill(BLACK_COLOR)
+            draw_text(text=f'You lose. Exit from 2 seconds.', size_font=72,
+                      center_coordinats=(W // 2, H // 2 - 50), color=RED_COLOR, screen=sc)
+            draw_text(text=f'Your score: {snake_hero.score}!', size_font=72,
+                      center_coordinats=(W // 2, H // 2), color=RED_COLOR, screen=sc)
+            pg.display.update()
+            running = False
+            time.sleep(2)
 
-# add color our main menu
-main_menu.fill(MAIN_MENU_COLOR)
+        # ПОсле всех проверок и обновлений, рисуем все изменения
+        pg.draw.rect(sc, RED_COLOR, goal_rect)
+        pg.draw.rect(sc, GREEN_COLOR, snake_hero.rect)
 
-# positions buttons
-pos_main_menu_play_button = main_menu_play_button.get_rect(
-    topleft=(pos_main_menu.x + 100, pos_main_menu.y + 100))
-pos_main_menu_quit_button = main_menu_quit_button.get_rect(
-    bottomleft=(pos_main_menu.bottomleft[0] + 100, pos_main_menu.bottomleft[1] - 100))
+        pg.display.update()
 
-# position text menu
-pos_menu_text = menu_text.get_rect(
-    topleft=(pos_main_menu.x + 100, pos_main_menu.y + 25))
+        clock.tick(FPS)
 
 
 def settings_menu():
@@ -117,7 +143,7 @@ def settings_menu():
         clock.tick(FPS)
 
 
-def main_menu():
+def main_menu():  # Главное меню нашего приложения
     running = True
     while running:
         sc.fill(BLACK_COLOR)
@@ -133,7 +159,7 @@ def main_menu():
                 sys.exit()
 
             if event.type == pg.USEREVENT and event.button == game_btn:
-                print(f"Enter first btn")
+                game_menu()
 
             if event.type == pg.USEREVENT and event.button == settings_btn:
                 settings_menu()

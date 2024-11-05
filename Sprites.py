@@ -2,31 +2,36 @@ import pygame as pg
 
 
 class SnakeHero(pg.sprite.Sprite):
-    def __init__(self, x, y, rect, direction, speed):
+    def __init__(self, x, y, rect, direction, speed, score):
         pg.sprite.Sprite.__init__(self)
         self.x = x
         self.y = y
         self.rect = rect
-        self.pos_rect = rect.get_rect()
         self.direction = direction
         self.speed = speed
+        self.score = score
 
     def update(self, new_direction):
+        if new_direction == 0:
+            return
+
         if self.direction != new_direction:
             self.direction = new_direction
 
         if self.direction == 'up':
-            self.x += 0
-            self.y -= self.speed
+            self.rect.move_ip(0, -self.speed)
         elif self.direction == 'down':
-            self.x += 0
-            self.y += self.speed
+            self.rect.move_ip(0, self.speed)
         elif self.direction == 'left':
-            self.x -= self.speed
-            self.y += 0
+            self.rect.move_ip(-self.speed, 0)
         elif self.direction == 'right':
-            self.x += self.speed
-            self.y += 0
+            self.rect.move_ip(self.speed, 0)
+
+    def check_bounds_out(self):
+        if self.rect.x > 1240 or self.rect.x < 0 or self.rect.y > 680 or self.rect.y < 0:
+            return True
+        else:
+            return False
 
 
 class SnakeBody(pg.sprite.Sprite):
@@ -41,7 +46,7 @@ class SnakeBody(pg.sprite.Sprite):
         self.indx = indx
         self.group = group
 
-    def update(self,):
+    def update(self, ):
         if self.direction == 'up':
             self.x += 0
             self.y -= self.speed
@@ -54,7 +59,6 @@ class SnakeBody(pg.sprite.Sprite):
         elif self.direction == 'right':
             self.x += self.speed
             self.y += 0
-
 
 
 class Ball(pg.sprite.Sprite):
