@@ -43,6 +43,7 @@ def create_grid_lines():
     return container_rects_background
 
 
+# Надо будет дополнить, проверку на голову и тело змеи
 def random_goal_rect(grid: dict):
     x_pos = random.randint(0, int(W / size_rect))
     y_pos = random.randint(0, int(H / size_rect))

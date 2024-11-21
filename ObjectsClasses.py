@@ -1,4 +1,6 @@
 import pygame as pg
+from settingsSnake import random_goal_rect
+
 
 class imageButton():
     def __init__(self, x, y, width, height, text, image_path, hover_image_path=None, sound_path=None):
@@ -39,3 +41,33 @@ class imageButton():
             if self.sound:
                 self.sound.play()
             pg.event.post(pg.event.Event(pg.USEREVENT, button=self))
+
+
+class Fruit():
+    def __init__(self, x, y, width, height, grid, image_path, sound_path=None):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.grid = grid
+
+        self.image = pg.image.load(image_path).convert_alpha()
+        self.image = pg.transform.scale(self.image, (width, height))
+
+        self.rect = self.image.get_rect(topleft=(x, y))
+
+        self.sound = None
+        if sound_path:
+            self.sound = pg.mixer.Sound(sound_path)
+
+    def draw(self, screen):
+        screen.blit(self.image, self.rect.topleft)
+
+    def check_snake_hero(self, snake_hero):
+        if self.rect.contains(snake_hero.rect):
+            snake_hero.score += 1
+            if self.sound:
+                self.sound.play()
+
+            new_rect = random_goal_rect(self.grid)
+            self.rect.topleft = (new_rect[0], new_rect[1])

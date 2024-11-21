@@ -1,12 +1,13 @@
 import sys
 import time
 
-from ObjectsClasses import imageButton
+from ObjectsClasses import imageButton, Fruit
 from Sprites import Ball, Ball2v, SnakeHero
 from settingsSnake import *
 
+# важно вызвать до pygame.init()
+pg.mixer.pre_init(44100, -16, 1, 512)
 pg.init()
-# pg.time.set_timer(pg.USEREVENT, 2000)  # 2000 указываются в мс, т.е. 2с (таймер события)
 
 # Set window object and size
 sc = pg.display.set_mode((W, H))
@@ -61,12 +62,18 @@ def create_snake_hero(size_rect):  # функция для создания на
 
 def game_menu():  # Функция для отображения окна и игрой после нажатия кнопки Game
     snake_hero = create_snake_hero(size_rect)
+    direct = 0
+
     # grid game lines
     grid = create_grid_lines()
     # random goal rect
     goal_rect = random_goal_rect(grid)
+
+    # create Fruit
+    apple = Fruit(goal_rect[0], goal_rect[1], goal_rect[2], goal_rect[3], grid, "images/Apple.png",
+                  "sounds/eatApple.mp3")
+
     running = True
-    direct = 0
     while running:
         # чтобы наша змейка не убежала сразу за экран, необходимо замедлить работу игры
         time.sleep(0.4)
@@ -88,10 +95,7 @@ def game_menu():  # Функция для отображения окна и и�
         #     pg.draw.rect(sc, BLUE_COLOR, rec, 1)
 
         # Проверка на достижения цели. Съели мы фрукт или нет?
-        if goal_rect.contains(snake_hero.rect):
-            snake_hero.score += 1
-            goal_rect = random_goal_rect(grid)
-
+        apple.check_snake_hero(snake_hero)
 
         # Проверяем не врезались ли мы в края, если да, то выводим надпись и выходим
         if snake_hero.check_bounds_out():
@@ -105,7 +109,7 @@ def game_menu():  # Функция для отображения окна и и�
             time.sleep(2)
 
         # ПОсле всех проверок и обновлений, рисуем все изменения
-        pg.draw.rect(sc, RED_COLOR, goal_rect)
+        apple.draw(sc)
         pg.draw.rect(sc, GREEN_COLOR, snake_hero.rect)
 
         pg.display.update()
