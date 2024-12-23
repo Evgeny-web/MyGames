@@ -63,11 +63,11 @@ class Fruit():
     def draw(self, screen):
         screen.blit(self.image, self.rect.topleft)
 
-    def check_snake_hero(self, snake_hero):
-        if self.rect.contains(snake_hero.rect):
-            snake_hero.score += 1
+    def check_snake_hero(self, snake_hero, coordinates_body_rects):
+        if self.rect.contains(snake_hero.rect_head):
+            snake_hero.eat_fruit()
             if self.sound:
                 self.sound.play()
 
-            new_rect = random_goal_rect(self.grid)
+            new_rect = random_goal_rect(self.grid, coordinates_body_rects)
             self.rect.topleft = (new_rect[0], new_rect[1])

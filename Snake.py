@@ -2,7 +2,7 @@ import sys
 import time
 
 from ObjectsClasses import imageButton, Fruit
-from Sprites import Ball, Ball2v, SnakeHero
+from Sprites import SnakeHero
 from settingsSnake import *
 
 # важно вызвать до pygame.init()
@@ -13,9 +13,25 @@ pg.init()
 sc = pg.display.set_mode((W, H))
 pg.display.set_caption('SnakeSnake')
 
-# Создание кнопок
+# Расположение кнопок
 x_pos_btn_for_main_menu = W / 2 - (252 / 2)
 width_btn_main_menu, height_btn_main_menu = 252, 74
+
+# Словаь изображений змеи
+snake_images_path = {'up': 'images/SnakeSprite/snake-head-up.png',
+                     'down': 'images/SnakeSprite/snake-head-down.png',
+                     'left': 'images/SnakeSprite/snake-head-left.png',
+                     'right': 'images/SnakeSprite/snake-head-right.png',
+                     'vertical': 'images/SnakeSprite/snake-body-vertical.png',
+                     'horizontal': 'images/SnakeSprite/snake-body-horizontal.png',
+                     'tail_up': 'images/SnakeSprite/snake-body-tail-up.png',
+                     'tail_down': 'images/SnakeSprite/snake-body-tail-down.png',
+                     'tail_left': 'images/SnakeSprite/snake-body-tail-left.png',
+                     'tail_right': 'images/SnakeSprite/snake-body-tail-right.png',
+                     'twist_upleft': 'images/SnakeSprite/snake-body-twist-upleft.png',
+                     'twist_upright': 'images/SnakeSprite/snake-body-twist-upright.png',
+                     'twist_downleft': 'images/SnakeSprite/snake-body-twist-downleft.png',
+                     'twist_downright': 'images/SnakeSprite/snake-body-twist-downright.png'}
 
 # buttons for main menu
 game_btn = imageButton(x_pos_btn_for_main_menu, 250, width_btn_main_menu,
@@ -52,22 +68,25 @@ array_btn_settings = [grafics_btn, control_btn, back_btn]
 clock = pg.time.Clock()
 
 
-def create_snake_hero(size_rect):  # функция для создания нашей головы змеи
-    snake_rect = pg.Rect(20 * size_rect, 13 * size_rect, size_rect, size_rect)
+def create_snake_hero(size_rect, snake_images_path):  # функция для создания нашей головы змеи
+    # необходимо сделать не прямоугольники, а словарь с изображением положения тела
+    # Это будем объектом Surface, что потребует метода blit
 
-    hero = SnakeHero(snake_rect[0], snake_rect[1], snake_rect, None, size_rect, GAME_SCORE)
+    hero = SnakeHero(x=20 * size_rect, y=13 * size_rect, width=size_rect, height=size_rect,
+                     direction=None, speed=size_rect, score=GAME_SCORE, images_path=snake_images_path)
 
     return hero
 
 
-def game_menu():  # Функция для отображения окна и игрой после нажатия кнопки Game
-    snake_hero = create_snake_hero(size_rect)
+def game_menu():  # Функция для отображения окна игры после нажатия кнопки Game
+    snake_hero = create_snake_hero(size_rect, snake_images_path)
     direct = 0
 
     # grid game lines
     grid = create_grid_lines()
+
     # random goal rect
-    goal_rect = random_goal_rect(grid)
+    goal_rect = random_goal_rect(grid, snake_hero.coordinates_body_rects)
 
     # create Fruit
     apple = Fruit(goal_rect[0], goal_rect[1], goal_rect[2], goal_rect[3], grid, "images/Apple.png",
@@ -77,7 +96,7 @@ def game_menu():  # Функция для отображения окна и и�
     while running:
         # чтобы наша змейка не убежала сразу за экран, необходимо замедлить работу игры
         time.sleep(0.4)
-        sc.fill(BLACK_COLOR)
+        sc.fill(GROW_COLOR)
 
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -91,26 +110,25 @@ def game_menu():  # Функция для отображения окна и и�
 
         # Прежде чем все отрисовывать, обновляем данные sanke_hero.rect
         snake_hero.update(direct)
-        # for pos, rec in grid.items():
-        #     pg.draw.rect(sc, BLUE_COLOR, rec, 1)
 
         # Проверка на достижения цели. Съели мы фрукт или нет?
-        apple.check_snake_hero(snake_hero)
+        apple.check_snake_hero(snake_hero, snake_hero.coordinates_body_rects)
 
         # Проверяем не врезались ли мы в края, если да, то выводим надпись и выходим
-        if snake_hero.check_bounds_out():
+        if snake_hero.check_bounds_out(W, H):
             sc.fill(BLACK_COLOR)
-            draw_text(text=f'You lose. Exit from 2 seconds.', size_font=72,
+            draw_text(text=f'GAME OVER!', size_font=72,
                       center_coordinats=(W // 2, H // 2 - 50), color=RED_COLOR, screen=sc)
             draw_text(text=f'Your score: {snake_hero.score}!', size_font=72,
                       center_coordinats=(W // 2, H // 2), color=RED_COLOR, screen=sc)
             pg.display.update()
             running = False
-            time.sleep(2)
+            time.sleep(4)
 
         # ПОсле всех проверок и обновлений, рисуем все изменения
         apple.draw(sc)
-        pg.draw.rect(sc, GREEN_COLOR, snake_hero.rect)
+        # pg.draw.rect(sc, GREEN_COLOR, snake_hero.rect)
+        snake_hero.draw(sc)
 
         pg.display.update()
 
@@ -188,39 +206,3 @@ def main_menu():  # Главное меню нашего приложения
 if __name__ == "__main__":
     main_menu()
 
-'''
-while True:
-    for event in pg.event.get():
-        if event.type == pg.QUIT:
-            exit()
-        elif event.type == pg.KEYDOWN:
-            if event.key == pg.K_ESCAPE:
-                if FlagMainMenu:
-                    FlagMainMenu = False
-                else:
-                    FlagMainMenu = True
-
-    if FlagMainMenu == True:
-        draw_main_menu_text()
-
-        if pg.mouse.get_focused() and pos_main_menu_quit_button.collidepoint(pg.mouse.get_pos()):
-            btns = pg.mouse.get_pressed()
-            if btns[0]:  # нажата левая кнопка мыши
-                exit()
-
-        elif pg.mouse.get_focused() and pos_main_menu_play_button.collidepoint(pg.mouse.get_pos()):
-            btns = pg.mouse.get_pressed()
-            if btns[0]:
-                FlagMainMenu = False
-
-    else:
-
-        container_rects_background = draw_display_lines_for_snake()
-
-
-
-    pg.display.update()
-
-    clock.tick(FPS)
-
-'''
