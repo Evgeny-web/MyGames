@@ -1,4 +1,4 @@
-import pygame as pg
+from AppSettings import *
 
 
 class SnakeHero(pg.sprite.Sprite):
@@ -29,6 +29,7 @@ class SnakeHero(pg.sprite.Sprite):
         # head snake
         self.head = self.snake_images['up']
         self.rect_head = self.head.get_rect(topleft=(x, y))
+        print(f'rect head: {self.rect_head}')
 
         # tail snake
         self.tail = self.snake_images['tail_up']
@@ -55,12 +56,14 @@ class SnakeHero(pg.sprite.Sprite):
         if new_direction == 0:
             return
 
-        if self.__direction != new_direction:
+        if self.__direction == None:
+            self.__direction = new_direction
+        elif self.__direction != new_direction and \
+                self.__dict_direction[new_direction] % 2 != self.__dict_direction[self.__direction] % 2:
             self.__direction = new_direction
 
         # создадим переменную для количества проходов цикла, до того, как прибавится новый элемент, чтобы его не считать
         len_body = self.length_body - 1
-        update_tail_flag = True  # для обновления хвоста змеи, будет меняться при добавлении элемента
 
         # Если мы должны увеличиться, то скопируем еще не измененный блок тела, чтобы потом присвоить эти координаты
         if self.add_body:
@@ -76,8 +79,6 @@ class SnakeHero(pg.sprite.Sprite):
 
             self.body.insert(-2, new_body_element)
             self.length_body += 1
-            update_tail_flag = False  # Теперь хвост не будет обновляться, чтоб не принимал неправильное положение
-            self.add_body = False
 
         # update head first
         tmp = self.body[0]['coordinates'].copy()
@@ -102,7 +103,7 @@ class SnakeHero(pg.sprite.Sprite):
             self.body[index]['coordinates'].move_ip(parameters['x'], parameters['y'])
             tmp = element
 
-        if update_tail_flag:
+        if not self.add_body:
             # update tail snake
             element = self.body[-1]['coordinates'].copy()
 
@@ -112,6 +113,8 @@ class SnakeHero(pg.sprite.Sprite):
             self.body[-1]['image'] = self.snake_images[parameters['direction']]
             self.body[-1]['direction'] = parameters['direction']
             self.body[-1]['coordinates'].move_ip(parameters['x'], parameters['y'])
+        else:
+            self.add_body = False
 
         self.coordinates_body_rects = {i: element['coordinates'] for i, element in enumerate(self.body)}
 
@@ -218,8 +221,18 @@ class SnakeHero(pg.sprite.Sprite):
         return {"direction": direct, "x": next_tmp_0, "y": next_tmp_1}
 
     def check_bounds_out(self, W, H) -> None:
+        # Если вышли за границы, то убиваем объект змеи и возвращаем истину на окончании игры
         if self.rect_head.x > W - self.speed or self.rect_head.x < 0 or self.rect_head.y > H - self.speed or self.rect_head.y < 0:
+            self.kill()
             return True
+
+        # Если пересекли тело головой, то возвращается истина, убиваем объект и заканчиваем.
+        # Проверяем пересечение начиная с 3 элемента, потому что голова никогда не сможет пересечь следующий за ней блок
+        elif self.rect_head.collidelist([element['coordinates'] for element in self.body[2:]]) != -1:
+            self.kill()
+            return True
+
+        # Иначе продолжаем
         else:
             return False
 
@@ -227,24 +240,3 @@ class SnakeHero(pg.sprite.Sprite):
         for element_snake in self.body:
             screen.blit(element_snake['image'], element_snake['coordinates'].topleft)
 
-
-class Ball2v(pg.sprite.Sprite):
-    '''
-    это 2 версия класса Ball, в которой реализованно добавление в группы
-    создание многочисленных объектов со случайным x
-    а также удаление при касании земли
-    '''
-
-    def __init__(self, x, speed, surf, score, group):
-        pg.sprite.Sprite.__init__(self)
-        self.image = surf
-        self.rect = self.image.get_rect(center=(x, 0))
-        self.speed = speed
-        self.score = score
-        self.add(group)
-
-    def update(self, *args):
-        if self.rect.y < args[0] - 20:
-            self.rect.y += self.speed
-        else:
-            self.kill()
